@@ -21,7 +21,7 @@
     void
     main()
     {
-        gl_Position = vec4(vPosition * 0.25, 1.0);
+        gl_Position = model * vec4(vPosition, 1.0);
     }
 </script>
 
@@ -36,11 +36,15 @@
     }
 </script>
 
+<style>
+    canvas {
+        margin: auto;
+        display: block;
+    }
+</style>
+
 <body>
-
-
-    <canvas id="gl-canvas" width="1060" height="1060">>
-
+    <canvas id="gl-canvas" width="860" height="860">>
     </canvas>
 </body>
 
