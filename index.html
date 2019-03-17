@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <title>Bunny</title>
+    <meta charset="UTF-8" />
+</head>
+
+<script type="text/javascript" src="./Common/webgl-utils.js"></script>
+<script type="text/javascript" src="./Common/initShaders.js"></script>
+<script type="text/javascript" src="./Common/MV.js"></script>
+<script type="text/javascript" src="./bunny.js"></script>
+<script type="text/javascript" src="./drawBunny.js"></script>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+    attribute vec3 vPosition;
+
+    // The transformation matrix
+    uniform mat4 model;
+
+    void
+    main()
+    {
+        gl_Position = vec4(vPosition * 0.25, 1.0);
+    }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+    precision mediump float;
+    
+    void
+    main()
+    {
+        gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );
+    }
+</script>
+
+<body>
+
+
+    <canvas id="gl-canvas" width="1060" height="1060">>
+
+    </canvas>
+</body>
+
+</html>
