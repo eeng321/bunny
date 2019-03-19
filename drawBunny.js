@@ -15,6 +15,9 @@ var Z_LIMIT = 6;
 var Z_CHANGE = 0.5;
 var xPos = 0, yPos = 0, zPos = 0;
 var curX, curY, tempX, tempY;
+var rx = 0, ry = 0; //rotate x and y
+var signX = 0, signY = 0; //direction of rotation
+var dx = 0, dy = 0; //distance moved in x and y mouse position
 
 //translation
 {
@@ -24,14 +27,28 @@ var curX, curY, tempX, tempY;
             tempX = event.pageX;
             tempY = event.pageY;
         }
+        else if (event.which == 3){
+            console.log("right");
+            tempX = event.offsetX;
+            tempY = event.offsetY;
+        }
     });
 
     addEventListener("mousemove", function (event) {
         if (event.which == 1) {
-            curX = event.pageX;
-            curY = event.pageY;
-            xPos = (curX - tempX) / TRANSLATE_SPEED;
-            yPos = (tempY - curY) / TRANSLATE_SPEED;
+            dx = event.pageX - tempX;
+            dy = tempY - event.pageY;
+            xPos = dx / TRANSLATE_SPEED;
+            yPos = dy / TRANSLATE_SPEED;
+        }
+        else if(event.which == 3){
+            dx = event.offsetX - tempX;
+            dy = tempY - event.offsetY;
+            signX = dx > 0 ? 1 : -1;
+            signY = dy < 0 ? 1 : -1;
+
+            rx = event.offsetX * signX;
+            ry = event.offsetY * signY;
         }
     });
 
@@ -97,7 +114,8 @@ function render() {
 
     scale = scalem(0.25, 0.25, 0.25);
     trans = translate(xPos, yPos, zPos);
-    rotation = rotate(0, [0, 0, 1]);
+    rotation = mult(rotate(rx, [0, 0, 1]), rotate(ry, [0, 1, 0]));
+
     var transform = mult(mult(scale, rotation), trans);
 
     gl.uniformMatrix4fv(model, false, flatten(transform));
