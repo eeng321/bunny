@@ -45,8 +45,9 @@
         //Normals are -1 to 1. Need to transform to 0 to 1
         vec3 adjustedNormal = normalize(vNormal) * 0.5 + 0.5;
         
-        gl_FragColor = vec4(color * 0.5 + (adjustedNormal * 0.3), 1.0);
+        gl_FragColor = vec4(color + adjustedNormal * 0.3, 1.0);
     }
+    
 </script>
 
 <style>
