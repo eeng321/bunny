@@ -3,8 +3,7 @@ var gl;
 var program;
 var height = 0.0;
 var vBuffer;
-var mBuffer;
-var VERTEX_SIZE = 3;
+var normalBuffer;
 var TRANSLATE_SPEED = 800;
 
 //transformations
@@ -19,6 +18,11 @@ var rx = 0, ry = 0; //rotate x and y
 var signX = 0, signY = 0; //direction of rotation
 var dx = 0, dy = 0; //distance moved in x and y mouse position
 
+var vertices = get_vertices();
+var faces = get_faces();
+var normals = [];
+var bunny = [];
+
 //translation
 {
     addEventListener("mousedown", function (event) {
@@ -28,7 +32,6 @@ var dx = 0, dy = 0; //distance moved in x and y mouse position
             tempY = event.pageY;
         }
         else if (event.which == 3){
-            console.log("right");
             tempX = event.offsetX;
             tempY = event.offsetY;
         }
@@ -87,45 +90,27 @@ window.onload = function init() {
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    // Creating the vertex buffer
+    // Creating the buffers
     vBuffer = gl.createBuffer();
-    // Binding the vertex buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.enableVertexAttribArray(vPosition);
-    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+    normalBuffer = gl.createBuffer();
 
+    getBunny();
+    getNormals();
     render();
 };
 
 function render() {
 
-    var vertices = get_vertices();
-    var faces = get_faces();
-    var bunny = [];
-
-    for (var i = 0; i < faces.length; i++) {
-        for (var j = 0; j < VERTEX_SIZE; j++) {
-            bunny.push(vertices[faces[i][j] - 1]);
-        }
-    }
-
-    var model = gl.getUniformLocation(program, "model");
-
-    scale = scalem(0.25, 0.25, 0.25);
-    trans = translate(xPos, yPos, zPos);
-    rotation = mult(rotate(rx, [0, 0, 1]), rotate(ry, [0, 1, 0]));
-
-    var transform = mult(mult(scale, rotation), trans);
-
-    gl.uniformMatrix4fv(model, false, flatten(transform));
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(bunny), gl.STATIC_DRAW);
-
-    // Clearing the buffer and drawing the bunny
+    // Clearing the buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
 
+    
+    setColor();
+    transformation();
+    fillBuffers();
 
     gl.drawArrays(gl.TRIANGLES, 0, bunny.length);
     window.requestAnimFrame(render);
@@ -133,4 +118,57 @@ function render() {
 
 function reset(){
     document.location.reload();
+}
+
+function setColor(){
+    var c = [0.8, 0.898039, 0.196078];
+    var color = gl.getUniformLocation(program, "color");
+    gl.uniform3fv(color, c);
+}
+
+function getBunny(){
+    //for drawing bunny
+    for (var i = 0; i < faces.length; i++) {
+        for (var j = 0; j < 3; j++) {
+            bunny.push(vertices[faces[i][j] - 1]);
+        }
+    }
+}
+
+function getNormals(){
+    var t1, t2;
+    for (var i = 2; i < bunny.length; i++) {
+        t1 = subtract(bunny[i-2], bunny[i-1]);
+        t2 = subtract(bunny[i-2], bunny[i]);
+        normals.push(cross(t1, t2));
+    }
+    // missing 2 elements since i started at 2
+    normals.push(cross(t1, t2));
+    normals.push(cross(t1, t2));
+    //console.log(bunny.length + "/" + normals.length);
+}
+
+function fillBuffers(){
+    var vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.enableVertexAttribArray(vPosition);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(bunny), gl.STATIC_DRAW);
+
+    var normal = gl.getAttribLocation(program, "normal");
+    gl.enableVertexAttribArray(normal);
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.vertexAttribPointer(normal, 3, gl.FLOAT, false, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
+}
+
+function transformation(){
+    scale = scalem(0.25, 0.25, 0.25);
+    trans = translate(xPos, yPos, zPos);
+    rotation = mult(rotate(rx, [0, 0, 1]), rotate(ry, [0, 1, 0]));
+
+    var transform = mult(mult(scale, rotation), trans);
+
+    var model = gl.getUniformLocation(program, "model");
+    gl.uniformMatrix4fv(model, false, flatten(transform));
 }
