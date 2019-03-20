@@ -4,7 +4,7 @@ var program;
 var height = 0.0;
 var vBuffer;
 var normalBuffer;
-var TRANSLATE_SPEED = 600;
+var TRANSLATE_SPEED = 800;
 
 //transformations
 var scale;
@@ -27,13 +27,9 @@ var bunny = [];
 {
     addEventListener("mousedown", function (event) {
 
-        if (event.which == 1) {
+        if (event.which == 1 || event.which == 3) {
             tempX = event.pageX;
             tempY = event.pageY;
-        }
-        else if (event.which == 3){
-            tempX = event.offsetX;
-            tempY = event.offsetY;
         }
     });
 
@@ -45,13 +41,13 @@ var bunny = [];
             yPos = dy / TRANSLATE_SPEED;
         }
         else if(event.which == 3){
-            dx = event.offsetX - tempX;
-            dy = tempY - event.offsetY;
+            dx = event.pageX - tempX;
+            dy = tempY - event.pageY;
             signX = dx > 0 ? 1 : -1;
             signY = dy < 0 ? 1 : -1;
 
-            rx = event.offsetX * signX;
-            ry = event.offsetY * signY;
+            rx = dx * signX;
+            ry = dy * signY;
         }
     });
 
@@ -162,7 +158,7 @@ function fillBuffers(){
 function transformation(){
     scale = scalem(0.25, 0.25, 0.25);
     trans = translate(xPos, yPos, zPos);
-    rotation = mult(rotate(rx, [0, 0, 1]), rotate(ry, [0, 1, 0]));
+    rotation = mult(rotate(rx, [0, 1, 0]), rotate(ry, [1, 0, 0]));
 
     var transform = mult(mult(scale, rotation), trans);
 
