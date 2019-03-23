@@ -20,14 +20,31 @@
     // The transformation matrix
     uniform mat4 model;
 
+    // World
+    uniform vec3 view;
+
+    // Light source
+    uniform vec3 pointLightPosition;
+
     // pass to fragment shader
     varying vec3 vNormal;
+
+    varying vec3 vSurfaceToLight;
+    varying vec3 vSurfaceToView;
 
     void
     main()
     {
-        vNormal = normal;
+
         gl_Position = model * vec4(vPosition, 1.0);
+
+        vNormal = mat3(model) * normal;
+        
+        vSurfaceToLight = pointLightPosition - vec3(gl_Position);
+
+        //vSurfaceToView = cross(pointLightPosition, vec3(gl_Position));
+        vSurfaceToView = view - vec3(gl_Position);
+
     }
 </script>
 
@@ -37,15 +54,27 @@
 
     uniform vec3 color;
 
+    varying vec3 vSurfaceToLight;
     varying vec3 vNormal;
+    varying vec3 vSurfaceToView;
 
     void
     main()
     {
-        //Normals are -1 to 1. Need to transform to 0 to 1
-        vec3 adjustedNormal = normalize(vNormal) * 0.5 + 0.5;
         
-        gl_FragColor = vec4(color + adjustedNormal * 0.3, 1.0);
+        vec3 adjustedNormal = normalize(vNormal);
+        
+        vec3 surfaceToLightDirection = normalize(vSurfaceToLight);
+        vec3 surfaceToViewDirection = normalize(vSurfaceToView);
+        vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
+
+        float light = dot(adjustedNormal, surfaceToLightDirection);
+        float specular = dot(adjustedNormal, halfVector);
+
+        gl_FragColor = vec4(color + adjustedNormal * 0.1, 1);
+
+        gl_FragColor.rgb *= light;
+        gl_FragColor.rgb += specular;
     }
     
 </script>

@@ -23,6 +23,9 @@ var faces = get_faces();
 var normals = [];
 var bunny = [];
 
+var POINT_LIGHT = [5,5,0];
+var SPOT_LIGHT = [0,4,2];
+
 //translation
 {
     addEventListener("mousedown", function (event) {
@@ -89,7 +92,6 @@ window.onload = function init() {
     // Creating the buffers
     vBuffer = gl.createBuffer();
     normalBuffer = gl.createBuffer();
-
     getBunny();
     getNormals();
     render();
@@ -104,6 +106,8 @@ function render() {
     gl.enable(gl.CULL_FACE);
     
     setColor();
+    setLight();
+    setView();
     transformation();
     fillBuffers();
 
@@ -153,6 +157,23 @@ function fillBuffers(){
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.vertexAttribPointer(normal, 3, gl.FLOAT, false, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
+}
+
+function setLight(){
+
+    var pointLightLocation = gl.getUniformLocation(program, "pointLightPosition");
+    //var lightPos = rotate(1,[0,0,1]);
+    //lightPos = vec3(lightPos) * POINT_LIGHT;
+    gl.uniform3fv(pointLightLocation, vec3(POINT_LIGHT));
+}
+
+function setView(){
+
+    // default origin view 
+    var camera =  [0,0,0];
+
+    var viewPosition = gl.getUniformLocation(program, "view");
+    gl.uniform3fv(viewPosition, camera);
 }
 
 function transformation(){
