@@ -81,7 +81,7 @@ window.onload = function init() {
     gl = WebGLUtils.setupWebGL(canvas);
     if (!gl) { alert("WebGL isn't available"); }
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.3, 0.3, 0.3, 1);
 
     //
     //  Load shaders and initialize attribute buffers
@@ -100,11 +100,11 @@ window.onload = function init() {
 function render() {
 
     // Clearing the buffer
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
-    
+
     setColor();
     setLight();
     setView();
@@ -120,7 +120,7 @@ function reset(){
 }
 
 function setColor(){
-    var c = [0.8, 0.598039, 0.196078];
+    var c = [0.8, 0.498039, 0.196078];
     var color = gl.getUniformLocation(program, "color");
     gl.uniform3fv(color, c);
 }
@@ -165,19 +165,40 @@ function setLight(){
     //var lightPos = rotate(1,[0,0,1]);
     //lightPos = vec3(lightPos) * POINT_LIGHT;
     gl.uniform3fv(pointLightLocation, vec3(POINT_LIGHT));
+
+    var spotLightLocation = gl.getUniformLocation(program, "spotLightPosition");
+    gl.uniform3fv(spotLightLocation, vec3(SPOT_LIGHT));
+
+    var innerLimitLocation = gl.getUniformLocation(program, "innerLimit");
+    var innerLimit = degreeToRad(10);
+    gl.uniform1f(innerLimitLocation, Math.cos(innerLimit));
+
+    var outerLimitLocation = gl.getUniformLocation(program, "outerLimit");
+    var outerLimit = degreeToRad(20);
+    gl.uniform1f(outerLimitLocation, Math.cos(outerLimit));
+
+    var lightDirectionLocation = gl.getUniformLocation(program, "lightDirection");
+    gl.uniform3fv(lightDirectionLocation, [-1,0,0]);
+
+    var lightLocation = gl.getUniformLocation(program, "light");
+    gl.uniform3fv(lightLocation, vec3(-0.5,0,2));
+}
+
+function degreeToRad(d){
+    return d * Math.PI / 180;
 }
 
 function setView(){
 
     // default origin view 
-    var camera =  [0,0,0];
+    var camera =  [1,1,1];
 
     var viewPosition = gl.getUniformLocation(program, "view");
     gl.uniform3fv(viewPosition, camera);
 }
 
 function transformation(){
-    scale = scalem(0.25, 0.25, 0.25);
+    scale = scalem(0.35, 0.35, 0.35);
     trans = translate(xPos, yPos, zPos);
     rotation = mult(rotate(rx, [0, 1, 0]), rotate(ry, [1, 0, 0]));
 

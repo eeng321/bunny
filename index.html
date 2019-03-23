@@ -23,24 +23,28 @@
     // World
     uniform vec3 view;
 
-    // Light source
+    // lights
     uniform vec3 pointLightPosition;
+    uniform vec3 spotLightPosition;
 
     // pass to fragment shader
     varying vec3 vNormal;
-
-    varying vec3 vSurfaceToLight;
+    varying vec3 vSurfaceToPointLight;
     varying vec3 vSurfaceToView;
+    varying vec3 vSurfaceToSpotLight;
+    varying vec3 position;
 
     void
     main()
     {
 
         gl_Position = model * vec4(vPosition, 1.0);
+        position = vec3(gl_Position);
 
         vNormal = mat3(model) * normal;
         
-        vSurfaceToLight = pointLightPosition - vec3(gl_Position);
+        vSurfaceToPointLight = pointLightPosition - vec3(gl_Position);
+        vSurfaceToSpotLight = spotLightPosition - vec3(gl_Position);
 
         //vSurfaceToView = cross(pointLightPosition, vec3(gl_Position));
         vSurfaceToView = view - vec3(gl_Position);
@@ -53,28 +57,47 @@
     precision mediump float;
 
     uniform vec3 color;
+    uniform vec3 light;
+    uniform vec3 lightDirection;
+    uniform float innerLimit;
+    uniform float outerLimit;
 
-    varying vec3 vSurfaceToLight;
+    varying vec3 position;
     varying vec3 vNormal;
+    varying vec3 vSurfaceToPointLight;
     varying vec3 vSurfaceToView;
+    varying vec3 vSurfaceToSpotLight;
+
 
     void
     main()
     {
         
-        vec3 adjustedNormal = normalize(vNormal);
+        //vec3 adjustedNormal = normalize(vNormal) * 0.5 + 0.5;
         
-        vec3 surfaceToLightDirection = normalize(vSurfaceToLight);
+        vec3 surfaceToPointLightDirection = normalize(vSurfaceToPointLight);
         vec3 surfaceToViewDirection = normalize(vSurfaceToView);
-        vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
+        vec3 surfaceToSpotLightDirection = normalize(vSurfaceToSpotLight);
 
-        float light = dot(adjustedNormal, surfaceToLightDirection);
-        float specular = dot(adjustedNormal, halfVector);
+        vec3 halfVectorPoint = normalize(surfaceToPointLightDirection + surfaceToViewDirection);
+        vec3 halfVectorSpot = normalize(surfaceToSpotLightDirection + surfaceToViewDirection);
+        vec3 halfVector = halfVectorPoint + halfVectorSpot;
 
-        gl_FragColor = vec4(color + adjustedNormal * 0.1, 1);
+        float pointLight = dot(vNormal, surfaceToPointLightDirection);
+        float specularPoint = dot(vNormal, halfVectorPoint);
 
-        gl_FragColor.rgb *= light;
-        gl_FragColor.rgb += specular;
+        float dotFromDirection = dot(surfaceToSpotLightDirection, vNormal);
+        float inLight = smoothstep(outerLimit, innerLimit, dotFromDirection);
+        float spotLight = inLight * dot(vNormal, surfaceToSpotLightDirection);
+        float specularSpot = inLight * dot(vNormal, halfVectorSpot);
+
+        float specular = specularPoint * specularSpot;
+        float specularBrightness = max(0.0, dot(vNormal, halfVector));
+
+        float lightDotProduct = dot(normalize(vNormal), light);
+        float surfaceBrightness = max(0.0, lightDotProduct);
+
+        gl_FragColor = vec4(color * surfaceBrightness + (specular * specularBrightness), 1);
     }
     
 </script>
